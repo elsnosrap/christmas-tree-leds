@@ -25,11 +25,8 @@ CRGB leds[NUM_LEDS];
 //-----------------------
 // Function definitions
 //-----------------------
-
-// Does a complete cycle of rainbow stuff
 void rainbow();
-
-// Does a red/green thing
+void transPride();
 void christmas(int hue);
 
 void setup() {
@@ -45,10 +42,13 @@ void loop() {
   rainbow();
 
   // Do a downard trans-pride
+  transPride();
 
   // Do a red/green thing
-  christmas(HUE_RED);
-  christmas(HUE_GREEN);
+  for (int i = 0; i < 3; i++) {
+    christmas(HUE_RED);
+    christmas(HUE_GREEN);
+  }
 
   // Do a magenta/purple thing
 
@@ -91,8 +91,12 @@ void rainbow() {
   }
 }
 
+void transPride() {
+
+}
+
 void christmas(int hue) {
-  for (int cycle = 0; cycle < NUM_LEDS; cycle++) {
+  for (int cycle = NUM_LEDS; cycle >= 0; cycle--) {
     // Set all LEDs to off first
     for (int x = 0; x < NUM_LEDS; x++) {
       leds[x] = CRGB(0, 0, 0);
