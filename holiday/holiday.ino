@@ -12,11 +12,17 @@
 #define DATA_PIN 4
 
 // Configurable parameters
-#define MAX_BRIGHTNESS 250      // Brightness for pixels considered the head of the snake
-#define SATURATION_VALUE 255    // How saturated the colors should be
+#define CHANCE_OF_TWINKLE 10      // 0 - 255 - chance a pixel will twinkle
+#define MAX_PIXELS_TWINKLE 80     // Maximum number of pixels to twinkle at any given time
+#define TWINKLE_DELAY 60          // Amount of time a pixel should stay on while twinkling
+#define MAX_TWINKLE_ROTATIONS 200 // Total number of times to go through the entire LED strip
+#define DO_RANDOM                 // If defined will do a random pattern
 
 // Define the array of leds
 CRGB leds[NUM_LEDS];
+
+// Keep track of total number of pixels twinkling at any given time
+int numPixelsTwinkling = 0;
 
 //-----------------------
 // Function definitions
@@ -25,6 +31,8 @@ void rainbow();
 void transPride();
 void christmas(int hue);
 void twinkle(int hue, int saturation, int brightness);
+void rainbowCycle();
+void anotherRainbow();
 
 void setup() {
   // start the serial port, so we can log data to the Arduino IDE
@@ -35,18 +43,36 @@ void setup() {
 }
 
 void loop() {
-  // Do a downward rainbow
+#ifdef DO_RANDOM
+  int fun = random(1, 7);
+
+  if (fun == 1) {
+    // Do a downward rainbow
+    rainbow();
+  } else if (fun == 2) {
+    // Do a downard trans-pride
+    transPride();
+  } else if (fun == 3) {
+    christmas(HUE_RED);
+  } else if (fun == 4) {
+    christmas(HUE_GREEN);
+  } else if (fun == 5) {
+    // Twinkle!
+    twinkle(32, 128, 40);
+  } else if (fun == 6) {
+    rainbowCycle();
+  } else if (fun == 7) {
+    anotherRainbow();
+  }
+#else
   rainbow();
-
-  // Do a downard trans-pride
   transPride();
-
-  // // Do a red/green thing
   christmas(HUE_RED);
   christmas(HUE_GREEN);
-
-  // Twinkle!
-  twinkle(HUE_PURPLE, 255, 80);
+  twinkle(32, 128, 40);
+  rainbowCycle();
+  anotherRainbow();
+#endif
 }
 
 void rainbow() {
@@ -146,5 +172,45 @@ void christmas(int hue) {
 }
 
 void twinkle(int hue, int saturation, int brightness) {
-  
+  for (int x = 0; x < MAX_TWINKLE_ROTATIONS; x++) {
+    // First, turn off all LEDs
+    for (int i = 0; i < NUM_LEDS; i++) {
+      leds[i] = CRGB(0, 0, 0);
+    }
+
+    // Twinkle them
+    for (int i = 0; i < NUM_LEDS; i++) {
+      if ((random8() < CHANCE_OF_TWINKLE) && (numPixelsTwinkling < MAX_PIXELS_TWINKLE)) {
+        leds[i] = CHSV(hue, saturation, brightness);
+      }
+    }
+
+    FastLED.show();
+    FastLED.delay(TWINKLE_DELAY);
+  }
+}
+
+void rainbowCycle() {
+  for (int cycle = 0; cycle < 256; cycle++) {
+    for (int i = 0; i < NUM_LEDS; i++) {
+      leds[i] = CHSV(cycle, 255, 80);
+    }
+    FastLED.show();
+    FastLED.delay(10);
+  }
+}
+
+void anotherRainbow() {
+  for (int i = 0; i < NUM_LEDS; i++) {
+    int hue = 0;
+    if (i > 255) {
+      hue = 255;
+    } else {
+      hue = i;
+    }
+
+    leds[i] = CHSV(hue, 255, 80);
+  }
+  FastLED.show();
+  FastLED.delay(5000);
 }
