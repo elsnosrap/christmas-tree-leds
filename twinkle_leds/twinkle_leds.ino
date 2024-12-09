@@ -20,6 +20,7 @@
 #define CHANCE_OF_TWINKLE     1
 #define DELTA_BRIGHTNESS_UP   1
 #define DELTA_BRIGHTNESS_DOWN 1
+#define MAX_TWINKLE_PIXELS 50
 
 // "Shimmery water" effect
 //#define BASE_BRIGHTNESS       210
@@ -34,7 +35,7 @@
 //#define SATURATION_VALUE      128
 
 // "Warm white twinkle" effect
-#define BASE_BRIGHTNESS       64
+#define BASE_BRIGHTNESS       0
 #define MAX_BRIGHTNESS        255
 #define HUE_VALUE             40  // Color between orange and yellow
 #define SATURATION_VALUE      190 // Combined with hue, creates a relatively warm white
@@ -43,6 +44,7 @@
 enum { SteadyDim, GettingBrighter, GettingDimmer };
 uint8_t pixelState[NUM_LEDS];
 uint8_t pixelBrightness[NUM_LEDS];
+int numPixelsTwinkling = 0;
 
 // Define the array of leds
 CRGB leds[NUM_LEDS];
@@ -66,15 +68,16 @@ void setup() {
 void loop() {
   twinkleMapPixels();
   FastLED.show();
-  FastLED.delay(20);
+  // FastLED.delay(20);
 }
 
 void twinkleMapPixels() {
   for (uint16_t i = 0; i < NUM_LEDS; i++) {
     if (pixelState[i] == SteadyDim) {
       // Pixel is currently at standard dim, see if it should twinkle
-      if (random8() < CHANCE_OF_TWINKLE) {
+      if ((random8() < CHANCE_OF_TWINKLE) && (numPixelsTwinkling < MAX_TWINKLE_PIXELS)) {
         pixelState[i] = GettingBrighter;
+        numPixelsTwinkling++;
       }
 
     } else if (pixelState[i] == GettingBrighter) {
@@ -94,6 +97,7 @@ void twinkleMapPixels() {
         leds[i] = CHSV(HUE_VALUE, SATURATION_VALUE, BASE_BRIGHTNESS);
         pixelState[i] = SteadyDim;
         pixelBrightness[i] = BASE_BRIGHTNESS;
+        numPixelsTwinkling--;
 
       } else {
         // Keep dimming it down

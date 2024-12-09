@@ -6,17 +6,18 @@
 //  https://github.com/FastLED/FastLED/wiki/Pixel-reference
 
 // Define the number of LEDs based on what we're connected to
-#define NUM_LEDS 267     // First strip
+#define NUM_LEDS 267  // First strip
 
 // The pin on the Arduino the LEDs are connected to
 #define DATA_PIN 4
 
 // Configurable parameters
-#define CHANCE_OF_TWINKLE 10      // 0 - 255 - chance a pixel will twinkle
-#define MAX_PIXELS_TWINKLE 80     // Maximum number of pixels to twinkle at any given time
-#define TWINKLE_DELAY 60          // Amount of time a pixel should stay on while twinkling
-#define MAX_TWINKLE_ROTATIONS 200 // Total number of times to go through the entire LED strip
-#define DO_RANDOM                 // If defined will do a random pattern
+#define CHANCE_OF_TWINKLE 10       // 0 - 255 - chance a pixel will twinkle
+#define MAX_PIXELS_TWINKLE 80      // Maximum number of pixels to twinkle at any given time
+#define TWINKLE_DELAY 60           // Amount of time a pixel should stay on while twinkling
+#define MAX_TWINKLE_ROTATIONS 200  // Total number of times to go through the entire LED strip
+// #define MOSTLY_TWINKLE             // If defined, will do mostly twinkle with some "christmas" functions
+// #define DO_RANDOM                  // If defined will do a random pattern
 
 // Define the array of leds
 CRGB leds[NUM_LEDS];
@@ -30,6 +31,7 @@ int numPixelsTwinkling = 0;
 void rainbow();
 void transPride();
 void christmas(int hue);
+void christmas(int hue, int saturation, int brightness);
 void twinkle(int hue, int saturation, int brightness);
 void rainbowCycle();
 void anotherRainbow();
@@ -37,13 +39,24 @@ void anotherRainbow();
 void setup() {
   // start the serial port, so we can log data to the Arduino IDE
   Serial.begin(9600);
-  
+
   // start FastLED, tell it about our LEDs
   FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);
 }
 
 void loop() {
-#ifdef DO_RANDOM
+#ifdef MOSTLY_TWINKLE
+  // 40% chance of a white twinkle
+  if (random8() <= 100) {
+    christmas(32, 128, 40);
+    twinkle(32, 128, 40);
+  } else {
+    // Twinkle a random color
+    int hue = random8();
+    christmas(hue);
+    twinkle(hue, 255, 80);
+  }
+#elif DO_RANDOM
   int fun = random(1, 7);
 
   if (fun == 1) {
@@ -84,7 +97,7 @@ void rainbow() {
     }
 
     // Paint new LEDs
-    for(int i = 0; i < 50; i++) {
+    for (int i = 0; i < 50; i++) {
       int led = i + cycle;
       if (led < NUM_LEDS) {
         // 0-5 = red
@@ -128,7 +141,7 @@ void transPride() {
     }
 
     // Paint new LEDs
-    for(int i = 0; i < 50; i++) {
+    for (int i = 0; i < 50; i++) {
       int led = i + cycle;
       if (led < NUM_LEDS) {
         // 0-9 = blue
@@ -153,6 +166,10 @@ void transPride() {
 }
 
 void christmas(int hue) {
+  christmas(hue, 255, 80);
+}
+
+void christmas(int hue, int saturation, int brightness) {
   for (int cycle = NUM_LEDS; cycle >= 0; cycle--) {
     // Set all LEDs to off first
     for (int x = 0; x < NUM_LEDS; x++) {
@@ -160,10 +177,10 @@ void christmas(int hue) {
     }
 
     // Paint new LEDs
-    for(int i = 0; i < 66; i++) {
+    for (int i = 0; i < 66; i++) {
       int led = i + cycle;
       if (led < NUM_LEDS) {
-        leds[led] = CHSV(hue, 255, 80);
+        leds[led] = CHSV(hue, saturation, brightness);
       }
     }
     FastLED.show();
